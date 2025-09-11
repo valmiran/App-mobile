@@ -1,23 +1,34 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, TouchableOpacityProps } from 'react-native';
 import { colors } from '../Theme/colors';
 
-interface Props {
+type Props = {
   title: string;
-  onPress: () => void;
   loading?: boolean;
-  style?: ViewStyle;
-}
+} & TouchableOpacityProps;
 
-export default function Button({ title, onPress, loading, style }: Props) {
+export default function Button({ title, loading, style, disabled, ...rest }: Props) {
+  const isDisabled = disabled || loading;
   return (
-    <TouchableOpacity style={[s.btn, style]} onPress={onPress} disabled={!!loading}>
-      {loading ? <ActivityIndicator /> : <Text style={s.txt}>{title}</Text>}
+    <TouchableOpacity
+      activeOpacity={0.9}
+      style={[s.btn, isDisabled && s.btnDisabled, style]}
+      disabled={isDisabled}
+      {...rest}
+    >
+      {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.txt}>{title}</Text>}
     </TouchableOpacity>
   );
 }
 
 const s = StyleSheet.create({
-  btn: { backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  txt: { color: '#052e16', fontWeight: '700', fontSize: 16 }
+  btn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  btnDisabled: { opacity: 0.6 },
+  txt: { color: '#fff', fontWeight: '700' }
 });

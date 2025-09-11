@@ -1,68 +1,97 @@
-// src/components/StatusBarOperacao.tsx
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Animated, Dimensions, StyleSheet } from 'react-native';
+// src/Components/StatusBarOperacao.tsx
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, Animated, StyleSheet, Easing, Dimensions } from 'react-native';
 import { colors } from '../Theme/colors';
-import { getSummary, subscribeProcessSummary } from '../services/processos.service';
-import { getNextFlightLabel, subscribeNextFlight } from '../services/voos.service';
+import { onProcessosChange, listProcessos } from '../services/processos.service';
+import { onVoosChange, listVoos } from '../services/voos.service';
+
+const { width } = Dimensions.get('window');
 
 export default function StatusBarOperacao() {
-  const screenWidth = Dimensions.get('window').width;
-  const translateX = useRef(new Animated.Value(screenWidth)).current;
+  // estados locais atualizados por serviços
+  const [processos, setProcessos] = useState(() => listProcessos());
+  const [voos, setVoos] = useState(() => listVoos());
 
-  const [abertos, setAbertos] = useState(0);
-  const [vencidos, setVencidos] = useState(0);
-  const [proximo, setProximo] = useState<string | null>(null);
-
-  function refresh() {
-    const { abertos, vencidos } = getSummary();
-    setAbertos(abertos);
-    setVencidos(vencidos);
-    setProximo(getNextFlightLabel());
-  }
-
+  // assina mudanças
   useEffect(() => {
-    // assina mudanças
-    const u1 = subscribeProcessSummary(refresh);
-    const u2 = subscribeNextFlight(refresh);
-    // primeira carga
-    refresh();
-
-    return () => { u1(); u2(); };
+    const unsubP = onProcessosChange(setProcessos);
+    const unsubV = onVoosChange(setVoos);
+    return () => { unsubP(); unsubV(); };
   }, []);
 
-  useEffect(() => {
-    const loop = () => {
-      translateX.setValue(screenWidth);
-      Animated.timing(translateX, {
-        toValue: -screenWidth,
-        duration: 10000, // 10s para atravessar
-        useNativeDriver: true,
-      }).start(() => loop());
-    };
-    loop();
-  }, [screenWidth, translateX, abertos, vencidos, proximo]);
+  // métricas
+  const { abertos, vencidos } = useMemo(() => {
+    let a = 0, v = 0;
+    for (const p of processos) {
+      if (p.status === 'aberto') a++;
+      if (p.status === 'vencido') v++;
+    }
+    return { abertos: a, vencidos: v };
+  }, [processos]);
 
-  const msg = `🛄 Processos: ${abertos} abertos / ${vencidos} vencidos   ${proximo ? `✈️ Próximo voo: ${proximo}` : ''}`;
+  const proximoVoo = useMemo(() => {
+    const now = Date.now();
+    const futuros = voos.filter(v => v.eta.getTime() >= now);
+    if (!futuros.length) return null;
+    futuros.sort((x, y) => x.eta.getTime() - y.eta.getTime());
+    return futuros[0];
+  }, [voos]);
+
+  const texto = useMemo(() => {
+    const partes = [
+      `Processos: ${abertos} abertos / ${vencidos} vencidos`,
+      `Voos: ${voos.length} cadastrados`,
+    ];
+    if (proximoVoo) {
+      const hh = proximoVoo.eta.getHours().toString().padStart(2, '0');
+      const mm = proximoVoo.eta.getMinutes().toString().padStart(2, '0');
+      partes.push(`Próximo voo: ${proximoVoo.codigo} — ${hh}:${mm}`);
+    } else {
+      partes.push('Próximo voo: —');
+    }
+    return partes.join('   |   ');
+  }, [abertos, vencidos, voos.length, proximoVoo]);
+
+  // ====== animação marquee ======
+  const animX = useRef(new Animated.Value(0)).current;
+  const [textW, setTextW] = useState(width);
+
+  useEffect(() => {
+    animX.stopAnimation();
+    animX.setValue(width);
+    Animated.loop(
+      Animated.timing(animX, {
+        toValue: -textW,
+        duration: Math.max(8000, (width + textW) * 15), // velocidade proporcional
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [texto, textW]);
 
   return (
-    <View style={s.statusContainer}>
-      <Animated.Text style={[s.statusText, { transform: [{ translateX }] }]}>
-        {msg}
+    <View style={s.wrap}>
+      <Animated.Text
+        onLayout={e => setTextW(e.nativeEvent.layout.width)}
+        style={[s.txt, { transform: [{ translateX: animX }] }]}
+        numberOfLines={1}
+      >
+        {texto}
       </Animated.Text>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  statusContainer: {
+  wrap: {
     backgroundColor: '#111827',
-    height: 24,
     overflow: 'hidden',
+    height: 28,
     justifyContent: 'center',
   },
-  statusText: {
+  txt: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 12,
+    paddingHorizontal: 12,
   },
 });

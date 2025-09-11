@@ -1,38 +1,51 @@
 // src/services/voos.service.ts
-export type Voo = { id: string; code: string; origemOuDest: string; hora: string }; // HH:MM
+import { createBus } from './eventBus';
 
-let voos: Voo[] = [];
-const listeners = new Set<() => void>();
 
-export function addFlight(v: Voo) {
-  voos = [v, ...voos];
+export type Voo = {
+  codigo: string;      // ex.: AD4518
+  origem?: string;     // ex.: REC
+  destino?: string;    // ex.: VCP
+  eta: Date;           // horário de chegada/partida relevante
+};
+
+const voosStore: Voo[] = [];
+
+const voosBus = createBus<Voo[]>();
+function notify() {
+  voosBus.emit([...voosStore]);
+}
+
+export function onVoosChange(fn: (all: Voo[]) => void) {
+  return voosBus.subscribe(fn);
+}
+
+export function listVoos() {
+  return [...voosStore];
+}
+
+export function addVoo(v: Voo) {
+  // opcional: evitar duplicados por código + eta
+  if (voosStore.some(x => x.codigo === v.codigo && x.eta.getTime() === v.eta.getTime())) {
+    throw new Error(`Voo ${v.codigo} já cadastrado para esse horário`);
+  }
+  voosStore.push(v);
   notify();
 }
 
-export function getNextFlightLabel(): string | null {
-  // retorna "AD2814 — 10:30" do voo mais próximo >= agora (considerando apenas hora de hoje)
-  const now = new Date();
-  const nowMins = now.getHours() * 60 + now.getMinutes();
-
-  const todayMins = (hhmm: string) => {
-    const [H, M] = hhmm.split(':').map(Number);
-    return H * 60 + M;
-  };
-
-  const future = voos
-    .map(v => ({ v, mins: todayMins(v.hora) }))
-    .filter(x => x.mins >= nowMins)
-    .sort((a, b) => a.mins - b.mins);
-
-  const chosen = future[0]?.v ?? voos.sort((a, b) => a.hora.localeCompare(b.hora))[0]; // fallback: mais cedo
-  return chosen ? `${chosen.code} — ${chosen.hora}` : null;
-}
-
-export function subscribeNextFlight(cb: () => void) {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
-}
-
-function notify() {
-  listeners.forEach(cb => cb());
+export function removeVoo(codigo: string, eta?: Date) {
+  const before = voosStore.length;
+  if (eta) {
+    const t = eta.getTime();
+    for (let i = voosStore.length - 1; i >= 0; i--) {
+      if (voosStore[i].codigo === codigo && voosStore[i].eta.getTime() === t) {
+        voosStore.splice(i, 1);
+      }
+    }
+  } else {
+    for (let i = voosStore.length - 1; i >= 0; i--) {
+      if (voosStore[i].codigo === codigo) voosStore.splice(i, 1);
+    }
+  }
+  if (voosStore.length !== before) notify();
 }

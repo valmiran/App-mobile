@@ -1,33 +1,38 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "ES2020",
+    "module": "ESNext",
     "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
+      "ES2020",
+      "DOM"
     ],
     "jsx": "react-jsx",
     "moduleResolution": "bundler",
     "customConditions": [
       "react-native"
     ],
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
     "strict": true,
+    "noImplicitAny": true,
+    "allowJs": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "types": [
       "react",
       "react-native",
-      "expo"
-    ]
+      "jest"
+    ],
+    "baseUrl": "."
   },
   "include": [
     "src",
     "App.tsx"
+  ],
+  "exclude": [
+    "node_modules"
   ],
   "extends": "expo/tsconfig.base"
 }

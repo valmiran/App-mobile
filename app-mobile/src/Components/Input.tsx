@@ -1,19 +1,21 @@
 import React from 'react';
-import { TextInput, StyleSheet, Text, View, TextInputProps } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TextInputProps } from 'react-native';
 import { colors } from '../Theme/colors';
 
-interface Props extends TextInputProps {
+type Props = {
   label?: string;
   error?: string;
-}
+  onChangeText?: (text: string) => void;
+} & Omit<TextInputProps, 'onChangeText'>;
 
-export default function Input({ label, error, style, ...rest }: Props) {
+export default function Input({ label, error, onChangeText, style, ...rest }: Props) {
   return (
-    <View style={{ marginBottom: 12 }}>
+    <View style={s.wrap}>
       {label ? <Text style={s.label}>{label}</Text> : null}
       <TextInput
-        placeholderTextColor={colors.muted}
         style={[s.input, style]}
+        placeholderTextColor={colors.muted}
+        onChangeText={onChangeText}
         {...rest}
       />
       {!!error && <Text style={s.error}>{error}</Text>}
@@ -22,10 +24,16 @@ export default function Input({ label, error, style, ...rest }: Props) {
 }
 
 const s = StyleSheet.create({
-  label: { color: colors.text, marginBottom: 6 },
+  wrap: { marginBottom: 12 },
+  label: { color: colors.text, marginBottom: 6, fontWeight: '600' },
   input: {
-    borderWidth: 1, borderColor: colors.border, backgroundColor: "#0B1220",
-    color: colors.text, borderRadius: 10, padding: 12
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#0F172A',
+    color: colors.text,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10
   },
-  error: { color: "#FCA5A5", marginTop: 6 }
+  error: { color: colors.danger, marginTop: 6, fontSize: 12 }
 });

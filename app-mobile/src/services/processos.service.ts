@@ -1,6 +1,7 @@
 // src/services/processos.service.ts
-export type Status = 'aberto' | 'observação' | 'finalizado' | 'vencido';
+import { createBus } from './eventBus';
 
+export type ProcessoStatus = 'aberto' | 'observação' | 'finalizado' | 'vencido';
 export type Processo = {
   processNumber: string;
   tipo: 'AHL' | 'DPR' | 'OHD';
@@ -9,56 +10,57 @@ export type Processo = {
   bag?: string;
   dano?: string;
   solucao?: 'Conserto' | 'Mala nova' | 'Voucher' | 'Não há tratativas';
-  status: Status;
+  status: ProcessoStatus;
   criadoEm: Date;
   finalizadoEm?: Date;
 };
 
-let store: Processo[] = [];
-const listeners = new Set<() => void>();
+// armazenamento simples em memória
+const store: Processo[] = [];
 
-export function addProcess(proc: Processo) {
-  const exists = store.some(p => p.processNumber === proc.processNumber);
-  if (exists) throw new Error('Processo duplicado');
-  store = [proc, ...store];
+// === BUS para mudanças ===
+const processosBus = createBus<Processo[]>();
+function notify() {
+  processosBus.emit([...store]);
+}
+
+// permitir que outros módulos “escutem”
+export function onProcessosChange(fn: (all: Processo[]) => void) {
+  return processosBus.subscribe(fn);
+}
+
+export function listProcessos() {
+  return [...store];
+}
+
+export function addProcess(p: Processo) {
+  if (store.some(x => x.processNumber === p.processNumber)) {
+    throw new Error(`Processo ${p.processNumber} já existe`);
+  }
+  store.unshift(p);
   notify();
 }
 
 export function finalizeProcess(processNumber: string) {
-  store = store.map(p =>
-    p.processNumber === processNumber
-      ? { ...p, status: 'finalizado', finalizadoEm: new Date() }
-      : p
-  );
-  notify();
+  const i = store.findIndex(p => p.processNumber === processNumber);
+  if (i >= 0) {
+    store[i] = { ...store[i], status: 'finalizado', finalizadoEm: new Date() };
+    notify();
+  }
 }
 
 export function setObservation(processNumber: string) {
-  store = store.map(p =>
-    p.processNumber === processNumber ? { ...p, status: 'observação' } : p
-  );
-  notify();
+  const i = store.findIndex(p => p.processNumber === processNumber);
+  if (i >= 0) {
+    store[i] = { ...store[i], status: 'observação' };
+    notify();
+  }
 }
 
-/** Reabre processo que estava em observação (status -> aberto) */
 export function setOpen(processNumber: string) {
-  store = store.map(p =>
-    p.processNumber === processNumber ? { ...p, status: 'aberto' } : p
-  );
-  notify();
-}
-
-export function getSummary() {
-  const abertos = store.filter(p => p.status === 'aberto' || p.status === 'observação').length;
-  const vencidos = store.filter(p => p.status === 'vencido').length;
-  return { abertos, vencidos };
-}
-
-export function subscribeProcessSummary(cb: () => void) {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
-}
-
-function notify() {
-  listeners.forEach(cb => cb());
+  const i = store.findIndex(p => p.processNumber === processNumber);
+  if (i >= 0) {
+    store[i] = { ...store[i], status: 'aberto' };
+    notify();
+  }
 }

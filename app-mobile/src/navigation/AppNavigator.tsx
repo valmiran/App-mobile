@@ -1,4 +1,4 @@
-// src/navigation/AppNavigator.tsx
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -80,11 +80,10 @@ function Tabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         header: () => (
-          <View>
+          <SafeAreaView edges={['top']} style={{ backgroundColor: '#0B1220' }}>
             <CustomHeader title={route.name} />
-            {/* Barra de status animada (marquee) importada do componente */}
             <StatusBarOperacao />
-          </View>
+          </SafeAreaView>
         ),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
@@ -118,6 +117,7 @@ function Tabs() {
     </Tab.Navigator>
   );
 }
+
 
 export default function AppNavigator() {
   const { user } = useAuth();
