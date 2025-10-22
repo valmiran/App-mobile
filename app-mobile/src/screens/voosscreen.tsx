@@ -36,9 +36,27 @@ export default function VoosScreen() {
     return unsub;
   }, []);
 
+  // ajuda a digitar no formato HH:MM inserindo ":" após 2 dígitos
+  const handleHoraChange = (txt: string) => {
+    const digits = txt.replace(/[^\d]/g, ''); // mantém só números
+    if (digits.length <= 2) {
+      setHora(digits);
+      return;
+    }
+    const hh = digits.slice(0, 2);
+    const mm = digits.slice(2, 4);
+    setHora(mm ? `${hh}:${mm}` : `${hh}:`);
+  };
+
   async function add() {
     if (!codigo || !hora) {
       return Alert.alert('Erro', 'Preencha o código do voo e a hora (HH:MM).');
+    }
+
+    // valida formato 24h
+    const horaOK = /^([01]\d|2[0-3]):[0-5]\d$/.test(hora.trim());
+    if (!horaOK) {
+      return Alert.alert('Erro', 'Hora inválida. Use o formato HH:MM (ex.: 08:30).');
     }
 
     const eta = dateTodayAt(hora);
@@ -94,6 +112,7 @@ export default function VoosScreen() {
           placeholder="Ex.: AD4518"
           value={codigo}
           onChangeText={setCodigo}
+          autoCapitalize="characters"
         />
         <Input
           label="Origem/Destino"
@@ -106,8 +125,18 @@ export default function VoosScreen() {
           label="Hora (HH:MM)"
           placeholder="Ex.: 08:30"
           value={hora}
-          onChangeText={setHora}
-          keyboardType="numeric"
+          onChangeText={handleHoraChange}   // <<< teclado livre + formatação HH:MM
+          keyboardType="default"            // <<< permite teclado normal
+          autoCapitalize="none"
+          autoCorrect={false}
+          maxLength={5}
+          onBlur={() => {
+            // validação simples no fim da digitação
+            const ok = /^([01]\d|2[0-3]):[0-5]\d$/.test(hora.trim());
+            if (!ok && hora.trim().length > 0) {
+              Alert.alert('Hora inválida', 'Use o formato 24h: HH:MM (ex.: 08:30, 14:05).');
+            }
+          }}
         />
 
         <Button title="Cadastrar voo" onPress={add} />

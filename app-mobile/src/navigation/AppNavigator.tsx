@@ -1,12 +1,15 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 
+import { useAuth } from '../context/Authcontext';
+import { colors } from '../Theme/colors';
 import StatusBarOperacao from '../Components/StatusBarOperacao';
 
+// ---- TELAS EXISTENTES ----
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import LLScreen from '../screens/LLScreen';
@@ -17,22 +20,43 @@ import PistaScreen from '../screens/PistaScreen';
 import MalhaScreen from '../screens/MalhaScreen';
 import RelatorioScreen from '../screens/RelatorioScreen';
 
-import { useAuth } from '../context/Authcontext';
-import { colors } from '../Theme/colors';
+// ---- NOVAS TELAS ----
+import ItemsScreen from '../screens/ItemsScreen';
+import AQDReportScreen from '../screens/AQDReportScreen';
+import ConnectivityScreen from '../screens/ConnectivityScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// -------------------- STACK DE OPERAÇÕES --------------------
 function OperacoesStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Embarque" component={EmbarqueScreen} />
       <Stack.Screen name="Pista" component={PistaScreen} />
       <Stack.Screen name="Relatorio" component={RelatorioScreen} />
+
+      {/* Novas telas dentro de Operações */}
+      <Stack.Screen
+        name="Items"
+        component={ItemsScreen}
+        options={{ headerShown: true, title: 'Listagem (FlatList)' }}
+      />
+      <Stack.Screen
+        name="AQDReport"
+        component={AQDReportScreen}
+        options={{ headerShown: true, title: 'AQD - Reporte de Segurança' }}
+      />
+      <Stack.Screen
+        name="Connectivity"
+        component={ConnectivityScreen}
+        options={{ headerShown: true, title: 'Conectividade (GPS/Rede)' }}
+      />
     </Stack.Navigator>
   );
 }
 
+// -------------------- HEADER CUSTOM --------------------
 function CustomHeader({ title }: { title: string }) {
   const { user, signOut } = useAuth();
 
@@ -49,9 +73,7 @@ function CustomHeader({ title }: { title: string }) {
       {/* Centro com título + saudação */}
       <View style={styles.headerCenter}>
         <Text style={styles.headerTitle}>{title || 'Airport Agent'}</Text>
-        {user && (
-          <Text style={styles.headerSubtitle}>👋 Olá seja bem vindo, {user.name}</Text>
-        )}
+        {user && <Text style={styles.headerSubtitle}>👋 Olá, seja bem-vindo, {user.name}</Text>}
       </View>
 
       {/* Ações rápidas à direita */}
@@ -75,6 +97,7 @@ function CustomHeader({ title }: { title: string }) {
   );
 }
 
+// -------------------- TABS --------------------
 function Tabs() {
   return (
     <Tab.Navigator
@@ -118,7 +141,7 @@ function Tabs() {
   );
 }
 
-
+// -------------------- ROOT NAVIGATOR --------------------
 export default function AppNavigator() {
   const { user } = useAuth();
   return (
@@ -132,6 +155,7 @@ export default function AppNavigator() {
   );
 }
 
+// -------------------- STYLES --------------------
 const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#0B1220',

@@ -13,14 +13,26 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Este app usa a câmera para anexar evidências no reporte AQD.",
+        "NSLocationWhenInUseUsageDescription": "Este app usa sua localização para anexar coordenadas ao reporte.",
+        "NSPhotoLibraryAddUsageDescription": "Salvar fotos capturadas pelo app."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET"
+      ],
+      "package": "com.valmiran.appmobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -28,7 +40,19 @@
     "entryPoint": "./App.tsx",
     "plugins": [
       "expo-font",
-      "expo-asset"
-    ]
+      "expo-asset",
+      "expo-mail-composer"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7960b131-416d-4358-bf73-0f90ad740df7"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7960b131-416d-4358-bf73-0f90ad740df7"
+    }
   }
 }
