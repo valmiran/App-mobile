@@ -1,58 +1,38 @@
 {
   "expo": {
-    "name": "app-mobile",
-    "slug": "app-mobile",
+    "name": "airport-agent",
+    "slug": "airport-agent",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    
+    "icon": "./assets/adaptive-icon.png",
+
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/adaptive-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
+
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSCameraUsageDescription": "Este app usa a câmera para anexar evidências no reporte AQD.",
-        "NSLocationWhenInUseUsageDescription": "Este app usa sua localização para anexar coordenadas ao reporte.",
-        "NSPhotoLibraryAddUsageDescription": "Salvar fotos capturadas pelo app."
-      }
+      "supportsTablet": true
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#000000"
       },
-      "edgeToEdgeEnabled": true,
-      "permissions": [
-        "CAMERA",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "INTERNET"
-      ],
-      "package": "com.valmiran.appmobile"
+      "package": "com.airportagent.publisher"
     },
+
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/adaptive-icon.png"
     },
-    "entryPoint": "./App.tsx",
-    "plugins": [
-      "expo-font",
-      "expo-asset",
-      "expo-mail-composer"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "7960b131-416d-4358-bf73-0f90ad740df7"
-      }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/7960b131-416d-4358-bf73-0f90ad740df7"
-    }
+
+    "plugins": []
   }
 }

@@ -31,7 +31,7 @@ const Tab = createBottomTabNavigator();
 // -------------------- STACK DE OPERAÇÕES --------------------
 function OperacoesStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, headerStyle: { backgroundColor : '#001422'}, headerTitleStyle: {color: '#fff'}, headerTintColor: '#001422' }}>
       <Stack.Screen name="Embarque" component={EmbarqueScreen} />
       <Stack.Screen name="Pista" component={PistaScreen} />
       <Stack.Screen name="Relatorio" component={RelatorioScreen} />

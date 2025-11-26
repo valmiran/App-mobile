@@ -1,5 +1,19 @@
+import { auth } from '../config/firebase-config';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
+
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+} from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -33,7 +47,7 @@ export default function LoginScreen() {
     const e = errors.password;
     if (!e) return [];
     const msgs: string[] = [];
-    
+
     const raw: any = e?.types || e?.message || e;
     if (typeof raw === 'string') msgs.push(raw);
     if (Array.isArray(raw)) raw.forEach((m) => typeof m === 'string' && msgs.push(m));
@@ -41,19 +55,49 @@ export default function LoginScreen() {
     return msgs.length ? msgs : [e.message as string].filter(Boolean);
   }, [errors.password]);
 
+  // 🔐 LOGIN: usa Firebase + atualiza o AuthContext
   const onSubmit = async ({ email, password }: LoginForm) => {
     try {
       setLoading(true);
+
+      // 1) Faz o login no Firebase Auth
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Usuário logado no Firebase:', cred.user.uid);
+
+      // 2) Atualiza o contexto interno do app (para header, navegação etc.)
       await signIn(email, password);
+
+      // opcional: você poderia exibir um toast ou algo leve aqui
     } catch (e: any) {
-      Alert.alert('Erro', e?.message || 'Falha ao autenticar');
+      console.log(e);
+      Alert.alert('Erro ao logar', e?.message || 'Não foi possível fazer login.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🆕 CADASTRO: cria usuário no Firebase Auth
+  const onRegister = async ({ email, password }: LoginForm) => {
+    try {
+      setLoading(true);
+      await createUserWithEmailAndPassword(auth, email, password);
+      Alert.alert('Sucesso', 'Usuário criado com sucesso! Agora você já pode entrar.');
+    } catch (error: any) {
+      console.log(error);
+      Alert.alert(
+        'Erro ao criar usuário',
+        error?.message || 'Não foi possível criar o usuário, tente novamente.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={globalStyles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       {/* Header */}
       <View style={s.header}>
         <Text style={s.appName}>Airport Agent</Text>
@@ -77,9 +121,23 @@ export default function LoginScreen() {
             error={passwordMessages[0]}
           />
 
+          {/* LOGIN */}
           <Button title="Entrar" onPress={handleSubmit(onSubmit)} loading={loading} />
 
-          {tooLong && <Text style={globalStyles.errorText}>A senha deve ter no máximo 12 caracteres.</Text>}
+          {tooLong && (
+            <Text style={globalStyles.errorText}>
+              A senha deve ter no máximo 12 caracteres.
+            </Text>
+          )}
+
+          {/* CADASTRO */}
+          <TouchableOpacity
+            style={s.registerButton}
+            onPress={handleSubmit(onRegister)}
+            disabled={loading}
+          >
+            <Text style={s.registerText}>Criar conta</Text>
+          </TouchableOpacity>
         </Card>
       </View>
 
@@ -111,5 +169,17 @@ const s = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     justifyContent: 'center',
+  },
+  registerButton: {
+    marginTop: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  registerText: {
+    color: colors.primary,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
